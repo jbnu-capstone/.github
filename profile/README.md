@@ -54,3 +54,9 @@
   - External File System(DB): 사용자·악보 메타데이터, 주석, 접근 권한의 정본 저장.
 
   - Local File System(DB): 악보, 전처리 결과, 예측 좌표 캐시. 오프라인·저지연용.
+ 
+
+## 시연 연상
+
+![apt_test (1)](https://github.com/user-attachments/assets/154ab0d3-3749-45ed-a8ff-86b1a15bb8de)
+

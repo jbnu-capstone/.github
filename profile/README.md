@@ -45,18 +45,47 @@
 
 - **Server**
 
-  - Prediction Manager: 오케스트레이션. 악보·오디오 전처리 → Prediction Model 호출 → 예측 좌표 반환. 결과와 메타데이터를 DB/파일시스템에 기록.
+  - Prediction Manager: 오디오 전처리 → Prediction Model 호출 → 예측 좌표 반환. 결과를 웹소켓을 통해 좌표를 클라이언트 측에 전달.
 
-  - Prediction Model: 전처리된 악보·오디오를 입력으로 현재 위치/다음 마디의 좌표를 예측.
+  - Prediction Model: 전처리된 악보·오디오를 입력으로 현재 위치 좌표를 예측.
 
 - **저장소**
 
-  - External File System(DB): 사용자·악보 메타데이터, 주석, 접근 권한의 정본 저장.
+  - External File System(DB): 사용자·악보 메타데이터 저장.
 
-  - Local File System(DB): 악보, 전처리 결과, 예측 좌표 캐시. 오프라인·저지연용.
+  - Local File System(DB): 악보, 전처리 결과, 필기 데이터 저장.
  
 
 ## 시연 연상
 
 ![apt_test (1)](https://github.com/user-attachments/assets/154ab0d3-3749-45ed-a8ff-86b1a15bb8de)
+
+## 사용된 기술 스택
+<p>
+<img src="https://img.shields.io/badge/python-3776AB?style=for-the-badge&logo=python&logoColor=white"> 
+
+<img src="https://img.shields.io/badge/firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=white">
+
+<img src="https://img.shields.io/badge/flutter-02569B?style=for-the-badge&logo=flutter&logoColor=white">
+
+</p>
+
+## 모델 구성 요소
+
+### 1. 오디오 전처리: Conv-TasNet 기반 소스 분리
+
+<img width="1435" height="1023" alt="image" src="https://github.com/user-attachments/assets/340c2e96-bfb7-42db-a623-353806fa4f31" />
+
+- **한 트랙 안에 섞인 여러 소리를 시간 도메인에서 직접 분리하는 딥러닝 모델**
+- **실제 연주 환경의 잡음·다른 악기 영향을 줄이려 전처리 단계에 Conv-TasNet을 둠**
+- **혼합 연주에서 피아노 트랙만 분리하여 기존 Multi-Resolution Prediction 기반 악보 추적 모델의 입력으로 사용**
+
+  **성과: 분리한 피아노 신호를 쓰면 실시간 추적이 더 안정적으로 변함**
+
+
+
+## 출판한 논문
+[오디오 소스 분리 기술을 통한 악보 추적 성능 개선 방안 (1).pdf](https://github.com/user-attachments/files/23414077/1.pdf)
+
+
 

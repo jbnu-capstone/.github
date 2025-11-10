@@ -76,12 +76,108 @@
 
 <img width="1435" height="1023" alt="image" src="https://github.com/user-attachments/assets/340c2e96-bfb7-42db-a623-353806fa4f31" />
 
+**사용 이유**: 여러 악기가 섞여 있는 공연 상황에서 악기 별로 연주를 추적해서 페이지를 넘길 필요가 있었기 때문이다. 
+
+<img width="2464" height="610" alt="image" src="https://github.com/user-attachments/assets/9ccd6ad3-3213-4dca-87ec-566cd969bfea" />
+
+**모델 파이프라인**:
+
+  - 입력 쪼개기: 
+  혼합 파형을 짧은 구간 L로 나눈다. (슬라이딩 윈도우)
+
+  - 인코딩: 
+  각 구간을 1D 컨볼루션 인코더로 변환해 특징 벡터로 만든다. STFT 없음. 시간 도메인 그대로 처리.
+
+  - 분리(마스크 추정): 
+  특징을 Separation 모듈에 넣어 소스별 마스크를 예측한다. 예: 피아노, 잡음.
+  
+  - 마스킹 적용: 
+  인코더 출력 × 마스크 = 소스별 인코더 표현. (그림의 ⊗)
+  
+  - 디코딩: 
+  소스별 인코더 표현을 디코더로 통과시켜 다시 파형으로 복원한다.
+  
+  - 구간 결합: 
+  복원된 짧은 구간들을 겹침-추가(OLA)로 이어 붙여 연속 파형을 만든다.
+  
+  - 결과: 
+  각 소스에 대한 분리 파형이 나온다. 필요하면 목표 소스만 사용한다.
+
+---
+
+
 - **한 트랙 안에 섞인 여러 소리를 시간 도메인에서 직접 분리하는 딥러닝 모델**
 - **실제 연주 환경의 잡음·다른 악기 영향을 줄이려 전처리 단계에 Conv-TasNet을 둠**
 - **혼합 연주에서 피아노 트랙만 분리하여 기존 Multi-Resolution Prediction 기반 악보 추적 모델의 입력으로 사용**
 
   **성과: 분리한 피아노 신호를 쓰면 실시간 추적이 더 안정적으로 변함**
 
+  ---
+
+### 2. WebSocket을 이용한 실시간 좌표 예측 서버 구축
+
+<img width="493" height="400" alt="image" src="https://github.com/user-attachments/assets/7affbba4-3efb-4cd6-bc6c-33e9067bf50e" />
+
+- **클라이언트가 연주음(‘Performance’)을 0.5초 간격으로 전송**
+- **서버가 예측된 좌표(‘Coords’)를 클라이언트에 전송**
+- **클라이언트가 악보(‘Score’)를 전송**
+
+---
+
+### 3. Yolo를 이용한 Multi-resolution Prediction 모델
+
+[출처](https://github.com/CPJKU/cyolo_score_following)
+
+![yolo](https://github.com/user-attachments/assets/0a61098f-d261-4617-9eba-c8b7fb0aab48)
+
+- **오디오**: waveform → STFT/로그멜 → CNN → LSTM → 조건 벡터 z
+
+- **이미지**: 악보 이미지 → Downscale CNN → FiLM으로 z 주입 → Upscale/합성
+
+- **출력**: YOLO식 Detection Heads가 노트·마디·시스템 박스를 예측
+
+---
+
+#### 3.1 해당 모델을 사용한 이유
+
+1. **사용자 편의성**: 기존 앱은 사전 작업이 완료된 악보만 악보 추적 기능을 제공하였다. 이를 해결하기 위해 사용자가 악보를 업로드하고 해당하는 악보를 인식하는 기술이 필요하였다.
+
+2. **실시간 추적에 맞는 속도·간단한 파이프라인·박스 기반 출력**:
+
+   - 작은 노트, 큰 마디·시스템을 동시에 봐야 한다. YOLO 계열의 멀티스케일 헤드로 한 번에 예측 가능하다.
+   
+   - 오디오 임베딩(z)을 FiLM 등으로 중간 피처에 주입하기 쉽다. 구조가 모듈식이라 결합·실험이 빠르다.
+   
+3. **데이터 효율**: 적은 악보 데이터로도 수렴이 빠르고 학습 및 튜닝 비용이 낮다.
+
+---
+
+### 4. 화면 흐름도
+
+**악보 추적 흐름도**
+<img width="1091" height="1359" alt="image" src="https://github.com/user-attachments/assets/e8a77a4a-315d-4314-add7-4ba9025c9c11" />
+
+**악보 필기 흐름도**
+<img width="1026" height="1380" alt="image" src="https://github.com/user-attachments/assets/787c5de6-ad22-4dae-a5c5-5d0192165b98" />
+
+
+
+### 5. 화면 설계
+
+**시작 화면**
+<img width="1215" height="612" alt="image" src="https://github.com/user-attachments/assets/95a9d514-2e8d-4c9e-8b0d-a0ae73bd2344" />
+
+**로그인 화면**
+<img width="1215" height="612" alt="image" src="https://github.com/user-attachments/assets/edd51d55-4adc-4a97-8d10-c203b8d707f0" />
+
+**악보 선택 화면**
+<img width="1327" height="612" alt="image" src="https://github.com/user-attachments/assets/ed7ddeaa-41e3-4d4c-b5ac-8d0ea3d20a34" />
+
+**악보 편집 화면**
+<img width="1328" height="612" alt="image" src="https://github.com/user-attachments/assets/41857a9c-1c4e-4d69-8f8f-410da0a61927" />
+
+**악보 필기 화면**
+<img width="1327" height="612" alt="image" src="https://github.com/user-attachments/assets/dfe3c34f-df1c-4d91-9c89-e83f0fb6460e" />
 
 
 ## 출판한 논문
